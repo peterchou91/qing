@@ -1,22 +1,24 @@
 package com.entity;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import com.exceptions.EllegalFormException;
 import com.util.Constants;
-import com.util.EllegalFormException;
 import com.util.Logger;
-import com.util.RuleFormNotInEinException;
 
 
 public class Rule {
 	private int form = 0;
 	
-	private List<Configuration> premise = null;
+	private Set<Configuration> premise = null;
 	private Configuration configuration = null;
-	public List<Configuration> getPremise() {
+	public Set<Configuration> getPremise() {
 		return premise;
 	}
-	public void setPremise(List<Configuration> premise) {
+	public void setPremise(Set<Configuration> premise) {
 		this.premise = premise;
 	}
 	public Configuration getConfiguration() {
@@ -26,12 +28,12 @@ public class Rule {
 		this.configuration = configuration;
 	}
 	
-	public Rule(List<Configuration> premise,Configuration configuration){
+	public Rule(Set<Configuration> premise,Configuration configuration){
 		this.premise = premise;
 		this.configuration = configuration;
 	}
 	public Rule(Configuration premise,Configuration configuration){
-		ArrayList<Configuration> l = new ArrayList<Configuration>();
+		Set<Configuration> l = new HashSet<Configuration>();
 		l.add(premise);
 		this.premise = l;
 		this.configuration = configuration;
@@ -116,6 +118,7 @@ public class Rule {
 	}
 	public void toSmallStep() {
 		if(this.getForm() == 0){
+			//premise‰∏≠Âè™Â≠òÂú®xÁöÑÊï∞Èáè
 			int wordExInPre = 0;
 			Configuration gama = null;
 			for(Configuration c : premise){
@@ -130,23 +133,78 @@ public class Rule {
 			}
 			Logger.debug("wordExInPre=" + wordExInPre);
 			Logger.debug("premise size:" + premise.size());
+			Logger.debug("this.configuration.getWord().length" + this.configuration.getWord().length);
+			for(String s : this.configuration.getWord()){
+				System.out.println(s);
+			}
+			
 			int wordExInCon = this.configuration.getWord()[0].equals("x") ? 1:0;
 			
-			if(((wordExInPre == this.premise.size() || this.getPremise().size() == 0) && this.configuration.getWord().length == 2) || (this.premise.size() == 0 && this.configuration.getWord()[0].equals(""))){
+			if(((wordExInPre == this.premise.size() || this.getPremise().size() == 0) 
+					&& this.configuration.getWord().length == 2) 
+					|| (this.premise.size() == 0 && this.configuration.getWord()[0].equals("#"))){
 				this.setForm(Constants.INTRODUCTION);
-				// todo
 				
 			}else if ((wordExInPre == this.premise.size() - 1 && gama.getWord().length == 2 )&& this.configuration.getWord()[0].equals("x") ){
 				this.setForm(Constants.ELIMINATION);
 			}else if ((wordExInPre == this.premise.size() || premise.size() == 0)&& this.configuration.getWord()[0].equals("x")){
 				this.setForm(Constants.NEUTRAL);
 			}else{
-				Logger.debug("’‚ÃıπÊ‘Ú≤ª∫œ∑®≤ªƒ‹◊™µΩsmall step");
+				Logger.debug("the rule can't be translated to small step");
 				Logger.debug(this.toString());
-				Logger.debug("≤ª∫œ∑®πÊ‘ÚΩ· ¯");
+				Logger.debug("");
 			}
 		}
 		
+	}
+	@Override
+	public int hashCode(){
+		int result = 3;
+		int f1 = 0;
+		int f2 = 0;
+		int f3 = 0;
+		/*private int form = 0;
+		
+		private List<Configuration> premise = null;
+		private Configuration configuration = null;*/
+		f1 = form;
+		if(null != premise){
+			f2 = Arrays.hashCode(premise.toArray(new Configuration[premise.size()]));
+		}
+		
+		if(null != configuration){
+			f3 = configuration.hashCode();
+		}
+		
+		result = 31 * result + f1;
+		result = 31 * result + f2;
+		result = 31 * result + f3;
+		
+		return result;
+	}
+	
+	@Override
+	public boolean equals(Object object){
+		if(object != null && object instanceof Rule){
+			Rule rule = (Rule)object;
+			if(this.form == rule.getForm() && this.configuration.equals(rule.getConfiguration()) && this.premiseEqual(rule.getPremise())){
+				return true;
+			}
+		}
+		return false;
+		
+	}
+	private boolean premiseEqual(Set<Configuration> premise2) {
+		if(null == premise2 && this.getPremise().size() != premise2.size()){
+			return false;
+		}
+		premise2.equals(premise2);
+		HashSet<Configuration> premiseHs = new HashSet<Configuration>(this.getPremise());
+		HashSet<Configuration> premise2Hs = new HashSet<Configuration>(premise2);
+		if(!premiseHs.equals(premise2Hs)){
+			return false;
+		}
+		return true;
 	}
 	
 }

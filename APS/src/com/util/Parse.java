@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.entity.Configuration;
 import com.entity.Rule;
@@ -12,29 +14,39 @@ import com.entity.Rule;
 
 public class Parse {
     //输入文件
-	private static String input = "src/input.in.bak";
+	private static String input = "src/testExample.input";
 	
 	
 	private static BufferedReader BR = null;
 	
-	private static ArrayList<Rule> rules = new ArrayList<Rule>();
-	public static ArrayList<Rule> getRules() {
+	private static Set<Rule> rules = new HashSet<Rule>();
+	private static Set<Configuration> configurations = new HashSet<Configuration>();
+	private static Set<String> symbols = new HashSet<String>();
+	
+	public static Set<String> getSymbols() {
+		return symbols;
+	}
+
+	public static void setSymbols(Set<String> symbols) {
+		Parse.symbols = symbols;
+	}
+
+	public static Set<Rule> getRules() {
 		return rules;
 	}
 
-	public static void setRules(ArrayList<Rule> rules) {
+	public static void setRules(Set<Rule> rules) {
 		Parse.rules = rules;
 	}
 
-	public static List<Configuration> getConfigurations() {
+	public static Set<Configuration> getConfigurations() {
 		return configurations;
 	}
 
-	public static void setConfigurations(List<Configuration> configurations) {
+	public static void setConfigurations(Set<Configuration> configurations) {
 		Parse.configurations = configurations;
 	}
 
-	private static List<Configuration> configurations = new ArrayList<Configuration>();
 	
 	public static void init(){
 		init(input);
@@ -105,7 +117,7 @@ public class Parse {
 		String premiseStr = confugrationStrs[0];
 		String configurationStr = confugrationStrs[1];
 		
-		List<Configuration> premise = parsePremise(premiseStr);
+		Set<Configuration> premise = parsePremise(premiseStr);
 		Configuration configuration = pareConfiguration(configurationStr);
 		
 	
@@ -133,15 +145,29 @@ public class Parse {
 			String[] tempStrs = configurationStr.split("\\)");
 			
 			// tempStrs[0]:p'1(a2,a3
-//			tempStrs[0] += ",x";
-			String state = tempStrs[0].split("\\(")[0];
+			String[] temp = tempStrs[0].split("\\(");
+			//temp[0]:p'1( ; temp[1]:a2,a3
+			String state = temp[0];
 			String[] word = null;
-			if( tempStrs[0].split("\\(").length == 1){
+			if( temp.length == 1){
 				//p()
 				word = new String[1];
 				word[0] = "";
 			}else{
-				word = ((tempStrs[0] + ",x").split("\\(")[1]).split(",");
+
+				if(temp[1].trim().equalsIgnoreCase("#")){
+					word = new String[]{"#"};
+				}else{
+//					word = ((tempStrs[0] + ",x").split("\\(")[1]).split(",");
+					if(!temp[1].contains("x")){
+						word = (temp[1] + ",x").split(",");
+					}else{
+						word = temp[1].split(",");
+					}
+				}
+				for(int i = 0; i < word.length - 1;i++){
+					symbols.add(word[i]);
+				}
 			}
 			
 			c.setState(state);
@@ -162,13 +188,13 @@ public class Parse {
 	}
 	
 	/**
-	 * 将premise字符串解析成premise
+	 * 将premise字符串解析成premise,如果premise字符串为空,则premise大小为0
 	 * @param line premise字符串
 	 * @return premise
 	 */
-	private static List<Configuration> parsePremise(String premiseStr) {
+	private static Set<Configuration> parsePremise(String premiseStr) {
 		// p1(a1,a4) & p2(a2,a3)
-		List<Configuration> premise = new ArrayList<Configuration>();
+		Set<Configuration> premise = new HashSet<Configuration>();
 		for(String temp : premiseStr.split("&")){
 			Configuration c = pareConfiguration(temp);
 			if ( null != c){

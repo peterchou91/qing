@@ -1,0 +1,7 @@
+Q(x)->P(a,x)
+T(x)->P(b,x)
+T(x)->R(a,x)
+->R(b,x)
+P(x)&R(x)->Q(x)
+->T(x)
+P(a,x)->S(x)
